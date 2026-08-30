@@ -1,0 +1,98 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pagerBtn {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.pagerBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageLabel {
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 70px;
+  text-align: center;
+}
+
+.scrollArea {
+  flex: 1;
+  overflow: auto;
+  background: var(--surface-muted);
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pageWrap {
+  position: relative;
+  display: inline-block;
+  background: white;
+  box-shadow: var(--shadow-md);
+  border-radius: 4px;
+  overflow: hidden;
+  height: fit-content;
+}
+
+.pageImg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.box {
+  position: absolute;
+  border: 2px solid var(--highlight);
+  background: var(--highlight-strong);
+  border-radius: 4px;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.box.dim {
+  opacity: 0.35;
+  border-color: #9ca3af;
+  background: rgba(156, 163, 175, 0.18);
+}
+
+.box.active {
+  border-color: var(--primary);
+  background: rgba(79, 70, 229, 0.22);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: auto;
+  text-align: center;
+  padding: 40px;
+}

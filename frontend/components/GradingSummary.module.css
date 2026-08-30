@@ -1,0 +1,69 @@
+.panel {
+  padding: 18px;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.scoreValue {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.scoreOf {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.summaryText {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--surface-muted);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+}
+
+.detail {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.detailNumber {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--primary);
+}
+
+.detailMarks {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.detailMarks.correct {
+  color: var(--success);
+}
+
+.detailMarks.incorrect {
+  color: var(--danger);
+}
+
+.detailFeedback {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
