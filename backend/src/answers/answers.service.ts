@@ -46,9 +46,12 @@ export async function extractAnswers(pages: PageImage[]): Promise<AnswerRegion[]
   const sorted = [...pages].sort((a, b) => a.page - b.page);
   const answers: AnswerRegion[] = [];
   let lastAnswerOnPreviousPage: AnswerRegion | null = null;
+  const overallStart = Date.now();
 
   for (const [idx, page] of sorted.entries()) {
     if (idx > 0) await sleep(PAGE_CALL_DELAY_MS);
+    const pageStart = Date.now();
+    console.log(`[answers] page ${page.page} (${idx + 1}/${sorted.length}) starting`);
     const userPrompt = `This is page ${page.page} of the student's answer sheet. Extract all answer blocks on
 it per the rules in the system prompt.`;
 
@@ -59,6 +62,9 @@ it per the rules in the system prompt.`;
     });
 
     const rawAnswers: any[] = Array.isArray(result?.answers) ? result.answers : [];
+    console.log(
+      `[answers] page ${page.page} done in ${Date.now() - pageStart}ms, found ${rawAnswers.length} block(s)`
+    );
     let firstOnThisPage = true;
 
     for (const raw of rawAnswers) {
@@ -83,6 +89,7 @@ it per the rules in the system prompt.`;
     lastAnswerOnPreviousPage = answers[answers.length - 1] ?? null;
   }
 
+  console.log(`[answers] all pages done in ${Date.now() - overallStart}ms, ${answers.length} answer(s) total`);
   return answers;
 }
 

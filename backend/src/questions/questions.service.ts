@@ -31,9 +31,12 @@ Return STRICT JSON only, matching this shape:
 export async function extractQuestions(pages: PageImage[]): Promise<Question[]> {
   const sorted = [...pages].sort((a, b) => a.page - b.page);
   const questions: Question[] = [];
+  const overallStart = Date.now();
 
   for (const [idx, page] of sorted.entries()) {
     if (idx > 0) await sleep(PAGE_CALL_DELAY_MS);
+    const pageStart = Date.now();
+    console.log(`[questions] page ${page.page} (${idx + 1}/${sorted.length}) starting`);
     const userPrompt = `This is page ${page.page} of the question paper. Extract all questions on it per
 the rules in the system prompt.`;
 
@@ -44,6 +47,9 @@ the rules in the system prompt.`;
     });
 
     const rawQuestions: any[] = Array.isArray(result?.questions) ? result.questions : [];
+    console.log(
+      `[questions] page ${page.page} done in ${Date.now() - pageStart}ms, found ${rawQuestions.length} question(s)`
+    );
 
     for (const q of rawQuestions) {
       questions.push({
@@ -56,6 +62,9 @@ the rules in the system prompt.`;
     }
   }
 
+  console.log(
+    `[questions] all pages done in ${Date.now() - overallStart}ms, ${questions.length} question(s) total`
+  );
   return questions;
 }
 

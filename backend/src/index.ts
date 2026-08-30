@@ -9,9 +9,19 @@ import { createGradingModule } from "./grading/grading.module";
 
 const app = express();
 
-
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+
+// Request-level timing log -- lets Render's log stream show exactly how long each
+// endpoint (e.g. the slow /api/*/extract calls) actually took.
+app.use((req, res, next) => {
+  const startedAt = Date.now();
+  console.log(`[http] -> ${req.method} ${req.originalUrl}`);
+  res.on("finish", () => {
+    console.log(`[http] <- ${req.method} ${req.originalUrl} ${res.statusCode} in ${Date.now() - startedAt}ms`);
+  });
+  next();
+});
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
