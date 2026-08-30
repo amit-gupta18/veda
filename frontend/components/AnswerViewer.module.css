@@ -2,51 +2,72 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  background: var(--toolbar-bg);
+  color: white;
   flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
+.toolbarTitle {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.toolbarControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.zoomControls,
 .pager {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.pagerBtn {
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+.toolBtn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 6px;
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
+  color: white;
+  font-weight: 600;
 }
 
-.pagerBtn:disabled {
+.toolBtn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
+.zoomLabel,
 .pageLabel {
   font-size: 13px;
-  color: var(--text-muted);
-  min-width: 70px;
+  color: rgba(255, 255, 255, 0.9);
+  min-width: 50px;
   text-align: center;
 }
 
 .scrollArea {
   flex: 1;
   overflow: auto;
-  background: var(--surface-muted);
+  background: #e8e8e8;
   display: flex;
   justify-content: center;
   padding: 20px;
@@ -60,6 +81,7 @@
   border-radius: 4px;
   overflow: hidden;
   height: fit-content;
+  transition: transform 0.15s ease;
 }
 
 .pageImg {
@@ -70,23 +92,35 @@
 
 .box {
   position: absolute;
-  border: 2px solid var(--highlight);
+  border: 2px solid var(--highlight-border);
   background: var(--highlight-strong);
-  border-radius: 4px;
+  border-radius: 6px;
   pointer-events: none;
   transition: opacity 0.15s ease;
 }
 
 .box.dim {
-  opacity: 0.35;
+  opacity: 0.2;
   border-color: #9ca3af;
-  background: rgba(156, 163, 175, 0.18);
+  background: rgba(156, 163, 175, 0.1);
 }
 
 .box.active {
-  border-color: var(--primary);
-  background: rgba(79, 70, 229, 0.22);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-color: var(--highlight-border);
+  background: var(--highlight-strong);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.boxLabel {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  background: var(--highlight);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px 0 6px 0;
 }
 
 .empty {
@@ -95,4 +129,17 @@
   margin: auto;
   text-align: center;
   padding: 40px;
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .toolbarControls {
+    width: 100%;
+    justify-content: space-between;
+  }
 }

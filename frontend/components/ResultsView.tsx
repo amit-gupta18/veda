@@ -10,7 +10,6 @@ import {
 } from "@/lib/types";
 import QuestionList from "./QuestionList";
 import AnswerViewer from "./AnswerViewer";
-import GradingSummary from "./GradingSummary";
 import styles from "./ResultsView.module.css";
 
 interface ResultsViewProps {
@@ -24,6 +23,8 @@ interface ResultsViewProps {
   onReset: () => void;
 }
 
+type MobileTab = "questions" | "answerSheet";
+
 export default function ResultsView({
   questions,
   mapping,
@@ -31,14 +32,15 @@ export default function ResultsView({
   unmatchedAnswerIds,
   answerPages,
   grading,
-  gradingSummary,
-  onReset,
+  onReset: _onReset,
 }: ResultsViewProps) {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [selectedUnmatchedId, setSelectedUnmatchedId] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("questions");
 
   const answerById = useMemo(() => new Map(answerRegions.map((a) => [a.id, a])), [answerRegions]);
   const mappingByQuestionId = useMemo(() => new Map(mapping.map((m) => [m.questionId, m])), [mapping]);
+  const questionById = useMemo(() => new Map(questions.map((q) => [q.id, q])), [questions]);
 
   const allRegions = useMemo(() => answerRegions.flatMap((a) => a.regions), [answerRegions]);
 
@@ -55,18 +57,31 @@ export default function ResultsView({
     return [];
   }, [selectedQuestionId, selectedUnmatchedId, mappingByQuestionId, answerById]);
 
+  const questionLabel = selectedQuestionId
+    ? questionById.get(selectedQuestionId)?.number ?? null
+    : null;
+
   return (
     <div className={styles.wrap}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Assessment results</h1>
-        <button className={styles.resetBtn} onClick={onReset}>
-          Start over
+      <div className={styles.mobileTabs}>
+        <button
+          className={`${styles.tab} ${mobileTab === "questions" ? styles.tabActive : ""}`}
+          onClick={() => setMobileTab("questions")}
+        >
+          Questions
+        </button>
+        <button
+          className={`${styles.tab} ${mobileTab === "answerSheet" ? styles.tabActive : ""}`}
+          onClick={() => setMobileTab("answerSheet")}
+        >
+          Answer Sheet
         </button>
       </div>
 
       <div className={styles.body}>
-        <div className={`${styles.col} ${styles.questionCol}`}>
-          <div className={styles.colHeading}>Questions ({questions.length})</div>
+        <div
+          className={`${styles.questionCol} ${mobileTab === "questions" ? styles.mobileVisible : styles.mobileHidden}`}
+        >
           <QuestionList
             questions={questions}
             mapping={mapping}
@@ -86,23 +101,16 @@ export default function ResultsView({
           />
         </div>
 
-        <div className={`${styles.col} ${styles.answerCol}`}>
-          <AnswerViewer pages={answerPages} activeRegions={activeRegions} allRegions={allRegions} />
+        <div
+          className={`${styles.answerCol} ${mobileTab === "answerSheet" ? styles.mobileVisible : styles.mobileHidden}`}
+        >
+          <AnswerViewer
+            pages={answerPages}
+            activeRegions={activeRegions}
+            allRegions={allRegions}
+            questionLabel={questionLabel}
+          />
         </div>
-
-        {grading && gradingSummary !== null && (
-          <div className={`${styles.col} ${styles.gradingCol}`}>
-            <div className={styles.colHeading} style={{ padding: "14px 12px 0" }}>
-              Grading
-            </div>
-            <GradingSummary
-              questions={questions}
-              grading={grading}
-              summary={gradingSummary}
-              selectedQuestionId={selectedQuestionId}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

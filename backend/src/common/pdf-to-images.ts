@@ -3,6 +3,12 @@ import { PageImage } from "./types";
 
 const IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
 
+// Cap the longest edge sent to OpenAI vision. Vision token cost scales with image pixel area
+// (512x512 tiles at "high" detail), and per-request token budgets on some accounts are tight --
+// keeping every image at a predictable, bounded size keeps per-call cost predictable regardless
+// of how high-resolution the source scan is.
+const MAX_DIMENSION = 1536;
+
 // pdfjs-dist ships as ESM only; dynamic import() lets this CommonJS module load it at runtime.
 let pdfjsLibPromise: Promise<any> | null = null;
 function getPdfjsLib() {
@@ -21,11 +27,7 @@ export async function fileToPageImages(buffer: Buffer, mimetype: string): Promis
     return rasterizePdf(buffer);
   }
   if (IMAGE_MIME_TYPES.has(mimetype)) {
-    // We don't know pixel dimensions without decoding; canvas isn't needed here since
-    // browsers/OpenAI can read the raw image. We still probe dimensions via canvas for consistency.
-    const { width, height } = await probeImageSize(buffer);
-    const dataUrl = `data:${mimetype};base64,${buffer.toString("base64")}`;
-    return [{ page: 1, dataUrl, width, height }];
+    return [await normalizeImage(buffer)];
   }
   throw new Error(`Unsupported file type: ${mimetype}`);
 }
@@ -38,7 +40,11 @@ async function rasterizePdf(buffer: Buffer): Promise<PageImage[]> {
 
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 2.0 }); // 2x for legible OCR of handwriting
+    const baseViewport = page.getViewport({ scale: 1.0 });
+    // Render at a scale that lands close to MAX_DIMENSION on the longest edge -- sharp enough for
+    // handwriting OCR without producing an oversized (and token-expensive) image.
+    const scale = Math.min(2.5, MAX_DIMENSION / Math.max(baseViewport.width, baseViewport.height));
+    const viewport = page.getViewport({ scale: Math.max(scale, 0.5) });
     const canvas = createCanvas(viewport.width, viewport.height);
     const context = canvas.getContext("2d");
 
@@ -51,7 +57,19 @@ async function rasterizePdf(buffer: Buffer): Promise<PageImage[]> {
   return pages;
 }
 
-async function probeImageSize(buffer: Buffer): Promise<{ width: number; height: number }> {
+async function normalizeImage(buffer: Buffer): Promise<PageImage> {
   const img = await loadImage(buffer);
-  return { width: img.width, height: img.height };
+  if (img.width <= MAX_DIMENSION && img.height <= MAX_DIMENSION) {
+    // Small enough already -- re-encode through canvas anyway so callers always get a plain PNG data URL.
+    const canvas = createCanvas(img.width, img.height);
+    canvas.getContext("2d").drawImage(img, 0, 0);
+    return { page: 1, dataUrl: canvas.toDataURL("image/png"), width: img.width, height: img.height };
+  }
+
+  const scale = MAX_DIMENSION / Math.max(img.width, img.height);
+  const width = Math.round(img.width * scale);
+  const height = Math.round(img.height * scale);
+  const canvas = createCanvas(width, height);
+  canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+  return { page: 1, dataUrl: canvas.toDataURL("image/png"), width, height };
 }

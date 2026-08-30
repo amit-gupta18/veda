@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AppShell from "@/components/AppShell";
 import UploadPanel from "@/components/UploadPanel";
 import ProgressView, { Stage } from "@/components/ProgressView";
 import ResultsView from "@/components/ResultsView";
@@ -71,7 +72,6 @@ export default function Home() {
         setGradingSummary(gRes.summary);
         setStageStatus("grading", "done");
       } catch (gradeErr) {
-        // Grading is optional scope -- don't block the core results view if it fails.
         console.error(gradeErr);
         setStageStatus("grading", "error");
       }
@@ -96,23 +96,33 @@ export default function Home() {
   }
 
   if (view === "processing") {
-    return <ProgressView stages={stages} />;
+    return (
+      <AppShell collapsed showBreadcrumb>
+        <ProgressView stages={stages} />
+      </AppShell>
+    );
   }
 
   if (view === "results") {
     return (
-      <ResultsView
-        questions={questions}
-        mapping={mapping}
-        answerRegions={answerRegions}
-        unmatchedAnswerIds={unmatchedAnswerIds}
-        answerPages={answerPages}
-        grading={grading}
-        gradingSummary={gradingSummary}
-        onReset={handleReset}
-      />
+      <AppShell collapsed showBreadcrumb mobileMinimal>
+        <ResultsView
+          questions={questions}
+          mapping={mapping}
+          answerRegions={answerRegions}
+          unmatchedAnswerIds={unmatchedAnswerIds}
+          answerPages={answerPages}
+          grading={grading}
+          gradingSummary={gradingSummary}
+          onReset={handleReset}
+        />
+      </AppShell>
     );
   }
 
-  return <UploadPanel onSubmit={handleSubmit} error={error} />;
+  return (
+    <AppShell showBreadcrumb>
+      <UploadPanel onSubmit={handleSubmit} error={error} />
+    </AppShell>
+  );
 }

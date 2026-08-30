@@ -1,25 +1,38 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { ArrowRightIcon, CloseIcon, PdfIcon, TeacherIllustration, UploadIcon } from "./icons";
 import styles from "./UploadPanel.module.css";
 
 const ACCEPTED = ".pdf,image/*";
+const MAX_SIZE_MB = 10;
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(0)}MB`;
+}
 
 interface DropzoneProps {
   label: string;
-  hint: string;
+  accent: string;
   file: File | null;
   onFile: (file: File | null) => void;
 }
 
-function Dropzone({ label, hint, file, onFile }: DropzoneProps) {
+function Dropzone({ label, accent, file, onFile }: DropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [active, setActive] = useState(false);
+
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onFile(null);
+    if (inputRef.current) inputRef.current.value = "";
+  };
 
   return (
     <div
       className={`${styles.dropzone} ${active ? styles.active : ""} ${file ? styles.filled : ""}`}
-      onClick={() => inputRef.current?.click()}
+      onClick={() => !file && inputRef.current?.click()}
       onDragOver={(e) => {
         e.preventDefault();
         setActive(true);
@@ -32,9 +45,26 @@ function Dropzone({ label, hint, file, onFile }: DropzoneProps) {
         if (dropped) onFile(dropped);
       }}
     >
-      <div className={styles.icon}>{file ? "✓" : "📄"}</div>
-      <div className={styles.label}>{label}</div>
-      {file ? <div className={styles.fileName}>{file.name}</div> : <div className={styles.hint}>{hint}</div>}
+      {file ? (
+        <div className={styles.fileCard}>
+          <button className={styles.removeBtn} onClick={handleRemove} aria-label="Remove file">
+            <CloseIcon />
+          </button>
+          <PdfIcon />
+          <div className={styles.fileInfo}>
+            <div className={styles.fileName}>{file.name}</div>
+            <div className={styles.fileMeta}>{formatFileSize(file.size)}</div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <UploadIcon />
+          <div className={styles.uploadLabel}>
+            Upload <span className={styles.accent}>{accent}</span>
+          </div>
+          <div className={styles.maxSize}>Max {MAX_SIZE_MB}MB</div>
+        </>
+      )}
       <input
         ref={inputRef}
         type="file"
@@ -59,38 +89,46 @@ export default function UploadPanel({ onSubmit, error }: UploadPanelProps) {
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.header}>
-        <h1 className={styles.title}>AI Assessment Extraction &amp; Answer Mapping</h1>
-        <p className={styles.subtitle}>
-          Upload a question paper and a student&rsquo;s handwritten answer sheet. We&rsquo;ll extract every
-          question, locate each answer, and highlight exactly where it appears.
-        </p>
+      <div className={styles.hero}>
+        <h1 className={styles.title}>
+          Upload <span className={styles.highlight}>Question Paper &amp; Answer Sheets</span>
+        </h1>
+        <p className={styles.subtitle}>Upload both files to get started</p>
+        <div className={styles.illustration}>
+          <TeacherIllustration />
+        </div>
       </div>
 
-      <div className={styles.grid}>
-        <Dropzone
-          label="Question paper"
-          hint="PDF or image · click or drag to upload"
-          file={questionPaper}
-          onFile={setQuestionPaper}
-        />
-        <Dropzone
-          label="Student answer sheet"
-          hint="PDF or image · click or drag to upload"
-          file={answerSheet}
-          onFile={setAnswerSheet}
-        />
-      </div>
+      <div className={styles.uploadArea}>
+        <div className={styles.grid}>
+          <Dropzone
+            label="Question Paper"
+            accent="Question Paper"
+            file={questionPaper}
+            onFile={setQuestionPaper}
+          />
+          <Dropzone
+            label="Answer Sheet"
+            accent="Answer Sheet"
+            file={answerSheet}
+            onFile={setAnswerSheet}
+          />
+        </div>
 
-      <div className={styles.actions}>
-        <button
-          className={styles.submit}
-          disabled={!canSubmit}
-          onClick={() => canSubmit && onSubmit(questionPaper!, answerSheet!)}
-        >
-          Process assessment
-        </button>
-        {error && <div className={styles.error}>{error}</div>}
+        <div className={styles.actions}>
+          <button
+            className={styles.submit}
+            disabled={!canSubmit}
+            onClick={() => canSubmit && onSubmit(questionPaper!, answerSheet!)}
+          >
+            Start Mapping
+            <ArrowRightIcon />
+          </button>
+          <p className={styles.hint}>
+            Once both files are uploaded, you&apos;ll able to map answers with questions
+          </p>
+          {error && <div className={styles.error}>{error}</div>}
+        </div>
       </div>
     </div>
   );

@@ -41,15 +41,17 @@ export async function callVisionJson(params: {
     })),
   ];
 
-  const response = await openai.chat.completions.create({
-    model: VISION_MODEL,
-    max_tokens: params.maxTokens ?? 4096,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: params.systemPrompt },
-      { role: "user", content },
-    ],
-  });
+  const response = await withRetry(() =>
+    openai.chat.completions.create({
+      model: VISION_MODEL,
+      max_tokens: params.maxTokens ?? 2048,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: params.systemPrompt },
+        { role: "user", content },
+      ],
+    })
+  );
 
   const raw = response.choices[0]?.message?.content;
   if (!raw) {
@@ -64,6 +66,33 @@ export async function callVisionJson(params: {
 }
 
 /**
+ * Retries a single OpenAI call on 429 (rate limit) with a short backoff -- these accounts often
+ * have low per-minute token/request caps, and a brief wait is usually enough for the window to reset.
+ */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 8): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastErr = err;
+      if (err?.status !== 429 || i === attempts - 1) throw err;
+      const retryAfterHeader = err?.headers?.["retry-after"];
+      const retryAfterMs = retryAfterHeader ? Number(retryAfterHeader) * 1000 : null;
+      const backoffMs = retryAfterMs && !Number.isNaN(retryAfterMs) ? retryAfterMs : 1000 * Math.pow(1.6, i);
+      const delayMs = Math.max(backoffMs, 2000) + 500;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  throw lastErr;
+}
+
+/** Simple sleep helper for pacing sequential per-page calls under a low requests-per-minute cap. */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
  * Text-only JSON call (used for mapping fallback / grading where images aren't needed again).
  */
 export async function callTextJson(params: {
@@ -72,15 +101,17 @@ export async function callTextJson(params: {
   maxTokens?: number;
 }): Promise<any> {
   const openai = getOpenAIClient();
-  const response = await openai.chat.completions.create({
-    model: VISION_MODEL,
-    max_tokens: params.maxTokens ?? 2048,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: params.systemPrompt },
-      { role: "user", content: params.userPrompt },
-    ],
-  });
+  const response = await withRetry(() =>
+    openai.chat.completions.create({
+      model: VISION_MODEL,
+      max_tokens: params.maxTokens ?? 1536,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: params.systemPrompt },
+        { role: "user", content: params.userPrompt },
+      ],
+    })
+  );
 
   const raw = response.choices[0]?.message?.content;
   if (!raw) {

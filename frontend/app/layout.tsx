@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "VedaAI Assessment Grader",
-  description: "Upload a question paper and a student's answer sheet to extract, map, and grade answers.",
+  title: "VedaAI",
+  description: "Upload a question paper and answer sheets to extract, map, and grade student answers.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

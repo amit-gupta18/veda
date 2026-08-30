@@ -6,16 +6,17 @@ import styles from "./AnswerViewer.module.css";
 
 interface AnswerViewerProps {
   pages: PageImage[];
-  activeRegions: BBox[]; // regions to highlight strongly (the selected answer)
-  allRegions: BBox[]; // every known answer region, shown dimmed for context
+  activeRegions: BBox[];
+  allRegions: BBox[];
+  questionLabel?: string | null;
 }
 
-export default function AnswerViewer({ pages, activeRegions, allRegions }: AnswerViewerProps) {
+export default function AnswerViewer({ pages, activeRegions, allRegions, questionLabel }: AnswerViewerProps) {
   const sortedPages = useMemo(() => [...pages].sort((a, b) => a.page - b.page), [pages]);
   const [pageIndex, setPageIndex] = useState(0);
+  const [zoom, setZoom] = useState(100);
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
-  // Jump to the first page containing an active region whenever the selection changes.
   useEffect(() => {
     if (activeRegions.length === 0) return;
     const targetPage = activeRegions[0].page;
@@ -32,6 +33,9 @@ export default function AnswerViewer({ pages, activeRegions, allRegions }: Answe
   if (sortedPages.length === 0) {
     return (
       <div className={styles.wrap}>
+        <div className={styles.toolbar}>
+          <span className={styles.toolbarTitle}>Answer Sheet</span>
+        </div>
         <div className={styles.empty}>No answer sheet pages to display.</div>
       </div>
     );
@@ -43,30 +47,53 @@ export default function AnswerViewer({ pages, activeRegions, allRegions }: Answe
   return (
     <div className={styles.wrap}>
       <div className={styles.toolbar}>
-        <div className={styles.pager}>
-          <button
-            className={styles.pagerBtn}
-            disabled={pageIndex === 0}
-            onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
-          >
-            ‹
-          </button>
-          <span className={styles.pageLabel}>
-            Page {current.page} of {sortedPages.length}
-          </span>
-          <button
-            className={styles.pagerBtn}
-            disabled={pageIndex === sortedPages.length - 1}
-            onClick={() => setPageIndex((i) => Math.min(sortedPages.length - 1, i + 1))}
-          >
-            ›
-          </button>
+        <span className={styles.toolbarTitle}>Answer Sheet</span>
+        <div className={styles.toolbarControls}>
+          <div className={styles.zoomControls}>
+            <button
+              className={styles.toolBtn}
+              onClick={() => setZoom((z) => Math.max(50, z - 10))}
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+            <span className={styles.zoomLabel}>{zoom}%</span>
+            <button
+              className={styles.toolBtn}
+              onClick={() => setZoom((z) => Math.min(200, z + 10))}
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+          </div>
+          <div className={styles.pager}>
+            <button
+              className={styles.toolBtn}
+              disabled={pageIndex === 0}
+              onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
+              aria-label="Previous page"
+            >
+              ‹
+            </button>
+            <span className={styles.pageLabel}>
+              Page {current.page} of {sortedPages.length}
+            </span>
+            <button
+              className={styles.toolBtn}
+              disabled={pageIndex === sortedPages.length - 1}
+              onClick={() => setPageIndex((i) => Math.min(sortedPages.length - 1, i + 1))}
+              aria-label="Next page"
+            >
+              ›
+            </button>
+          </div>
         </div>
       </div>
 
       <div className={styles.scrollArea}>
         <div
           className={styles.pageWrap}
+          style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}
           ref={(el) => {
             pageRefs.current[current.page] = el;
           }}
@@ -88,7 +115,9 @@ export default function AnswerViewer({ pages, activeRegions, allRegions }: Answe
                     width: `${r.w * 100}%`,
                     height: `${r.h * 100}%`,
                   }}
-                />
+                >
+                  {isActive && questionLabel && <span className={styles.boxLabel}>Q{questionLabel}</span>}
+                </div>
               );
             })}
         </div>

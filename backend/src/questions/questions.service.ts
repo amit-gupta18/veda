@@ -1,8 +1,12 @@
-import { callVisionJson } from "../common/openai.client";
+import { callVisionJson, sleep } from "../common/openai.client";
 import { PageImage, Question } from "../common/types";
 
-const SYSTEM_PROMPT = `You are an expert exam-paper parser. You will be shown one or more page images of a printed
-question paper, in page order. Extract EVERY question in the exact printed order.
+// Paces sequential per-page calls to stay under low-tier per-minute request caps common on
+// free/trial OpenAI accounts (e.g. 10 RPM). withRetry() in openai.client still handles any overflow.
+const PAGE_CALL_DELAY_MS = 4500;
+
+const SYSTEM_PROMPT = `You are an expert exam-paper parser. You will be shown ONE page image of a printed
+question paper. Extract EVERY question that appears on THIS page, top to bottom.
 
 Rules:
 - If a question has labelled sub-parts (e.g. "a)", "b)", "(i)", "(ii)"), treat EACH sub-part as its own
@@ -11,35 +15,55 @@ Rules:
   questions with no sub-parts.
 - Preserve the ORIGINAL numbering exactly as printed (including things like "Q1", "1.", "2)", etc.) in "number".
 - "text" should be the full question text (strip the leading number/label itself from "text").
-- "order" is a 0-based index reflecting the printed order across the whole paper (top-level and sub-parts
-  interleaved in reading order).
+- If a question offers two alternative versions joined by the word "OR" (a common board-exam pattern, where
+  the student answers either alternative), keep it as ONE entry with both alternatives in "text" separated by
+  " OR " -- do not split it into two entries with the same number.
 - Ignore headers, instructions, marks allocation notes, and footers -- only extract actual questions.
-- Return STRICT JSON only, matching this shape:
+- If this page has no questions on it (e.g. a cover page), return an empty "questions" array.
+
+Return STRICT JSON only, matching this shape:
 {
   "questions": [
-    { "number": "11(a)", "parentNumber": "11", "text": "...", "order": 0 }
+    { "number": "11(a)", "parentNumber": "11", "text": "..." }
   ]
 }`;
 
 export async function extractQuestions(pages: PageImage[]): Promise<Question[]> {
-  const userPrompt = `Here are ${pages.length} page image(s) of a question paper, in order. Extract all questions
-per the rules in the system prompt.`;
+  const sorted = [...pages].sort((a, b) => a.page - b.page);
+  const questions: Question[] = [];
 
-  const result = await callVisionJson({
-    systemPrompt: SYSTEM_PROMPT,
-    userPrompt,
-    images: pages.map((p) => ({ dataUrl: p.dataUrl, page: p.page })),
-  });
+  for (const [idx, page] of sorted.entries()) {
+    if (idx > 0) await sleep(PAGE_CALL_DELAY_MS);
+    const userPrompt = `This is page ${page.page} of the question paper. Extract all questions on it per
+the rules in the system prompt.`;
 
-  const rawQuestions: any[] = Array.isArray(result?.questions) ? result.questions : [];
+    const result = await callVisionJson({
+      systemPrompt: SYSTEM_PROMPT,
+      userPrompt,
+      images: [{ dataUrl: page.dataUrl, page: page.page }],
+    });
 
-  return rawQuestions.map((q, idx) => ({
-    id: `q-${slugify(q.number ?? String(idx))}`,
-    number: String(q.number ?? `${idx + 1}`),
-    parentNumber: q.parentNumber ? String(q.parentNumber) : undefined,
-    text: String(q.text ?? "").trim(),
-    order: typeof q.order === "number" ? q.order : idx,
-  }));
+    const rawQuestions: any[] = Array.isArray(result?.questions) ? result.questions : [];
+
+    for (const q of rawQuestions) {
+      questions.push({
+        id: uniqueId(`q-${slugify(q.number ?? String(questions.length))}`, questions),
+        number: String(q.number ?? `${questions.length + 1}`),
+        parentNumber: q.parentNumber ? String(q.parentNumber) : undefined,
+        text: String(q.text ?? "").trim(),
+        order: questions.length,
+      });
+    }
+  }
+
+  return questions;
+}
+
+function uniqueId(base: string, existing: Question[]): string {
+  if (!existing.some((q) => q.id === base)) return base;
+  let i = 2;
+  while (existing.some((q) => q.id === `${base}-${i}`)) i++;
+  return `${base}-${i}`;
 }
 
 function slugify(input: string): string {
