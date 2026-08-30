@@ -27,17 +27,6 @@
   color: var(--text-secondary);
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.expandAllBtn:hover {
-  background: #e8e8e8;
-  border-color: #ccc;
-  color: var(--text);
-}
-
-.expandAllBtn:active {
-  transform: scale(0.97);
 }
 
 .list {
@@ -52,17 +41,15 @@
   border-radius: var(--radius-md);
   padding: 14px 16px;
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  transition: border-color 0.15s ease;
 }
 
 .card:hover {
   border-color: #ccc;
-  box-shadow: var(--shadow-sm);
 }
 
 .card.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .cardHeader {

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import AppShell from "@/components/AppShell";
 import UploadPanel from "@/components/UploadPanel";
 import ProgressView, { Stage } from "@/components/ProgressView";
 import ResultsView from "@/components/ResultsView";
-import { useShellConfig } from "@/components/ShellContext";
 import { extractAnswers, extractQuestions, gradeAnswers, mapAnswers } from "@/lib/api";
 import {
   AnswerRegion,
@@ -23,7 +23,7 @@ const STAGE_LABELS = [
   { key: "grading", label: "Grading & generating feedback" },
 ];
 
-export default function ExamsPage() {
+export default function Home() {
   const [view, setView] = useState<ViewState>("upload");
   const [stages, setStages] = useState<Stage[]>(
     STAGE_LABELS.map((s) => ({ ...s, status: "pending" as const }))
@@ -37,12 +37,6 @@ export default function ExamsPage() {
   const [unmatchedAnswerIds, setUnmatchedAnswerIds] = useState<string[]>([]);
   const [grading, setGrading] = useState<GradingResult[] | null>(null);
   const [gradingSummary, setGradingSummary] = useState<string | null>(null);
-
-  useShellConfig({
-    collapsed: view !== "upload",
-    mobileMinimal: view === "results",
-    breadcrumb: "Exams",
-  });
 
   function setStageStatus(key: string, status: Stage["status"]) {
     setStages((prev) => prev.map((s) => (s.key === key ? { ...s, status } : s)));
@@ -102,23 +96,33 @@ export default function ExamsPage() {
   }
 
   if (view === "processing") {
-    return <ProgressView stages={stages} />;
+    return (
+      <AppShell collapsed showBreadcrumb activeSection="Exams">
+        <ProgressView stages={stages} />
+      </AppShell>
+    );
   }
 
   if (view === "results") {
     return (
-      <ResultsView
-        questions={questions}
-        mapping={mapping}
-        answerRegions={answerRegions}
-        unmatchedAnswerIds={unmatchedAnswerIds}
-        answerPages={answerPages}
-        grading={grading}
-        gradingSummary={gradingSummary}
-        onReset={handleReset}
-      />
+      <AppShell collapsed showBreadcrumb mobileMinimal activeSection="Exams">
+        <ResultsView
+          questions={questions}
+          mapping={mapping}
+          answerRegions={answerRegions}
+          unmatchedAnswerIds={unmatchedAnswerIds}
+          answerPages={answerPages}
+          grading={grading}
+          gradingSummary={gradingSummary}
+          onReset={handleReset}
+        />
+      </AppShell>
     );
   }
 
-  return <UploadPanel onSubmit={handleSubmit} error={error} />;
+  return (
+    <AppShell showBreadcrumb activeSection="Exams">
+      <UploadPanel onSubmit={handleSubmit} error={error} />
+    </AppShell>
+  );
 }
