@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import AppShell from "@/components/AppShell";
 import UploadPanel from "@/components/UploadPanel";
 import ProgressView, { Stage } from "@/components/ProgressView";
 import ResultsView from "@/components/ResultsView";
+import { useShellConfig } from "@/components/ShellContext";
 import { extractAnswers, extractQuestions, gradeAnswers, mapAnswers } from "@/lib/api";
 import {
   AnswerRegion,
@@ -23,7 +23,7 @@ const STAGE_LABELS = [
   { key: "grading", label: "Grading & generating feedback" },
 ];
 
-export default function Home() {
+export default function ExamsPage() {
   const [view, setView] = useState<ViewState>("upload");
   const [stages, setStages] = useState<Stage[]>(
     STAGE_LABELS.map((s) => ({ ...s, status: "pending" as const }))
@@ -37,6 +37,12 @@ export default function Home() {
   const [unmatchedAnswerIds, setUnmatchedAnswerIds] = useState<string[]>([]);
   const [grading, setGrading] = useState<GradingResult[] | null>(null);
   const [gradingSummary, setGradingSummary] = useState<string | null>(null);
+
+  useShellConfig({
+    collapsed: view !== "upload",
+    mobileMinimal: view === "results",
+    breadcrumb: "Exams",
+  });
 
   function setStageStatus(key: string, status: Stage["status"]) {
     setStages((prev) => prev.map((s) => (s.key === key ? { ...s, status } : s)));
@@ -96,33 +102,23 @@ export default function Home() {
   }
 
   if (view === "processing") {
-    return (
-      <AppShell collapsed showBreadcrumb>
-        <ProgressView stages={stages} />
-      </AppShell>
-    );
+    return <ProgressView stages={stages} />;
   }
 
   if (view === "results") {
     return (
-      <AppShell collapsed showBreadcrumb mobileMinimal>
-        <ResultsView
-          questions={questions}
-          mapping={mapping}
-          answerRegions={answerRegions}
-          unmatchedAnswerIds={unmatchedAnswerIds}
-          answerPages={answerPages}
-          grading={grading}
-          gradingSummary={gradingSummary}
-          onReset={handleReset}
-        />
-      </AppShell>
+      <ResultsView
+        questions={questions}
+        mapping={mapping}
+        answerRegions={answerRegions}
+        unmatchedAnswerIds={unmatchedAnswerIds}
+        answerPages={answerPages}
+        grading={grading}
+        gradingSummary={gradingSummary}
+        onReset={handleReset}
+      />
     );
   }
 
-  return (
-    <AppShell showBreadcrumb>
-      <UploadPanel onSubmit={handleSubmit} error={error} />
-    </AppShell>
-  );
+  return <UploadPanel onSubmit={handleSubmit} error={error} />;
 }

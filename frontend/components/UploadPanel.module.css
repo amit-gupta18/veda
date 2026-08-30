@@ -51,6 +51,11 @@
   background: var(--surface-muted);
   border-radius: var(--radius-xl);
   padding: 24px;
+  transition: box-shadow 0.15s ease;
+}
+
+.uploadArea:hover {
+  box-shadow: var(--shadow-sm);
 }
 
 .grid {
@@ -70,15 +75,26 @@
   text-align: center;
   gap: 12px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   min-height: 150px;
   justify-content: center;
 }
 
-.dropzone:hover,
+.dropzone:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.dropzone:active {
+  transform: translateY(0);
+}
+
 .dropzone.active {
   border-color: var(--accent);
   background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
 }
 
 .dropzone.filled {
@@ -87,6 +103,14 @@
   background: var(--surface);
   cursor: default;
   padding: 16px;
+  transform: none;
+  box-shadow: none;
+}
+
+.dropzone.filled:hover {
+  border-color: #ccc;
+  background: var(--surface);
+  transform: none;
 }
 
 .uploadLabel {
@@ -129,6 +153,16 @@
   align-items: center;
   justify-content: center;
   z-index: 1;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.removeBtn:hover {
+  background: var(--danger);
+  transform: scale(1.1);
+}
+
+.removeBtn:active {
+  transform: scale(0.95);
 }
 
 .fileInfo {
@@ -174,11 +208,18 @@
   padding: 14px 40px;
   font-size: 15px;
   font-weight: 600;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .submit:hover:not(:disabled) {
   background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.submit:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .submit:disabled {

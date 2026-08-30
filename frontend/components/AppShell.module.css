@@ -40,10 +40,29 @@
   gap: 10px;
 }
 
+.logoLink {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.logoLink:hover {
+  opacity: 0.85;
+  transform: scale(1.02);
+}
+
 .logoText {
   font-size: 18px;
   font-weight: 700;
   flex: 1;
+  text-decoration: none;
+  color: var(--text);
+  transition: color 0.15s ease;
+}
+
+.logoText:hover {
+  color: var(--accent);
 }
 
 .collapseBtn {
@@ -54,6 +73,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.collapseBtn:hover {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.collapseBtn:active {
+  transform: scale(0.95);
 }
 
 .toolkitBtn {
@@ -70,6 +100,17 @@
   width: 100%;
   justify-content: center;
   box-shadow: 0 0 12px rgba(255, 107, 53, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.toolkitBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.35);
+  background: var(--primary-hover);
+}
+
+.toolkitBtn:active {
+  transform: translateY(0);
 }
 
 .toolkitBtnCollapsed {
@@ -84,6 +125,16 @@
   justify-content: center;
   margin: 0 auto;
   box-shadow: 0 0 12px rgba(255, 107, 53, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.toolkitBtnCollapsed:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(255, 107, 53, 0.35);
+}
+
+.toolkitBtnCollapsed:active {
+  transform: scale(0.98);
 }
 
 .nav {
@@ -105,6 +156,17 @@
   font-weight: 500;
   width: 100%;
   text-align: left;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.navItem:hover {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.navItem:active {
+  transform: scale(0.98);
 }
 
 .sidebarCollapsed .navItem {
@@ -118,6 +180,10 @@
   background: var(--surface-muted);
   color: var(--text);
   font-weight: 600;
+}
+
+.navItemActive:hover {
+  background: #e8e8e8;
 }
 
 .sidebarBottom {
@@ -138,6 +204,13 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.schoolCard:hover {
+  border-color: #ccc;
+  box-shadow: var(--shadow-sm);
 }
 
 .schoolLogo,
@@ -171,6 +244,13 @@
   border: none;
   color: var(--text-muted);
   padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.expandBtn:hover {
+  background: var(--surface-muted);
+  color: var(--text);
 }
 
 .main {
@@ -215,6 +295,16 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.iconBtn:hover {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.iconBtn:active {
+  transform: scale(0.92);
 }
 
 .bellBtn .notifDot {
@@ -252,6 +342,18 @@
   padding: 4px 8px 4px 4px;
   border-radius: var(--radius-pill);
   cursor: pointer;
+  background: none;
+  border: none;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+
+.profile:hover {
+  background: var(--surface-muted);
+}
+
+.profile:active {
+  transform: scale(0.98);
 }
 
 .avatar {
@@ -272,9 +374,86 @@
   overflow: auto;
 }
 
+.mobileOverlay {
+  display: none;
+}
+
+.mobileMenu {
+  display: none;
+}
+
+.mobileNavItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mobileNavItem:hover {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+
+.mobileNavItemActive {
+  background: var(--surface-muted);
+  color: var(--text);
+  font-weight: 600;
+}
+
 @media (max-width: 900px) {
   .sidebar {
     display: none;
+  }
+
+  .mobileOverlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .mobileMenu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: fixed;
+    top: 56px;
+    right: 16px;
+    left: 16px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 8px;
+    box-shadow: var(--shadow-md);
+    z-index: 101;
+    animation: slideDown 0.2s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .header {
@@ -301,7 +480,7 @@
     display: flex;
   }
 
-  .headerRight .iconBtn:last-child {
+  .headerRight .menuBtn {
     display: flex;
   }
 
@@ -309,4 +488,8 @@
   .headerRight > .iconBtn[aria-label="AI features"] {
     display: none;
   }
+}
+
+.menuBtn {
+  display: none;
 }
